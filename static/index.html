@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dumb Tech Assistant</title>
+  <title>Will Chat</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <h1>Dumb Tech Assistant</h1>
+  <h1>Will Chat</h1>
   <div id="chat"></div>
 
   <div class="input-container">
@@ -66,6 +66,18 @@
         assistantMsg.className = 'message assistant';
         assistantMsg.innerText = data.response || 'No response';
         chat.appendChild(assistantMsg);
+        // Ajouter la confidence
+        const confidenceMsg = document.createElement('div');
+        confidenceMsg.className = 'message assistant confidence';
+        confidenceMsg.innerText = `Confidence: ${data.confidence}%`;
+        chat.appendChild(confidenceMsg);
+        // Si il y a un link, on le met
+        if (data.link) {
+          const linkMsg = document.createElement('div');
+          linkMsg.className = 'message assistant link';
+          linkMsg.innerHTML = `Link: <a href="${data.link}" target="_blank">${data.link}</a>`;
+          chat.appendChild(linkMsg);
+        }
 
         // Faire défiler vers le bas
         chat.scrollTop = chat.scrollHeight;
