@@ -1,13 +1,18 @@
-# main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 import requests
+import urllib.parse
+import re
+import json
 from prompt_config import SYSTEM_PROMPT
 
-# 1) Création de l'app et CORS
+class AskRequest(BaseModel):
+    question: str
+
+# Initialize app and CORS
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -15,53 +20,71 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# 2) Montage du dossier static sur /static
+# Serve static front
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# 3) Route GET / pour servir index.html
 @app.get("/", response_class=HTMLResponse)
 async def serve_index():
     with open("static/index.html", encoding="utf-8") as f:
         return HTMLResponse(f.read())
 
-# 4) Route POST /ask
-class AskRequest(BaseModel):
-    question: str
-
-OLLAMA_URL = "http://localhost:11434/api/generate"
+# Use the generate endpoint
+GENERATE_URL = "http://localhost:11434/api/generate"
 MODEL = "deepseek-r1:7b"
 
 @app.post("/ask")
 def ask(req: AskRequest):
     question = req.question.strip()
     if not question:
-        return {"error": "Question manquante"}
+        return {"response": "Error: No question provided.", "confidence": "0%", "link": ""}
 
-    full_prompt = f"{SYSTEM_PROMPT}\nUser: {question}\nAssistant:"
-    payload = {"model": MODEL, "prompt": full_prompt, "stream": False}
+    # URL-encode question for possible links
+    encoded_q = urllib.parse.quote(question)
+
+    # Build prompt: system prompt + user question
+    prompt = SYSTEM_PROMPT.replace("<url_encoded_question>", encoded_q)
+    prompt = prompt + f"\nUser: {question}\nAssistant:"
 
     try:
-        resp = requests.post(OLLAMA_URL, json=payload, timeout=None)
+        # Call Ollama generate endpoint
+        payload = {
+            "model": MODEL,
+            "prompt": prompt,
+            "stream": False
+        }
+        resp = requests.post(GENERATE_URL, json=payload, timeout=None)
         resp.raise_for_status()
-        result = resp.json()
+        data = resp.json()
 
-        answer = result.get("response", "").strip() or "Erreur: réponse vide."
-        # Tu peux extraire confidence & link si ton prompt les génère
-        confidence = result.get("confidence", "")
-        link = result.get("link", "")
+        # Extract raw response from generate
+        content = data.get("response", "").strip()
 
+        # Remove any <think>...</think> blocks
+        content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
+
+        # Debug log
+        print("CLEANED CONTENT:", content)
+
+        # Extract JSON substring
+        start = content.find("{")
+        end = content.rfind("}")
+        if start != -1 and end != -1 and end > start:
+            json_str = content[start:end+1]
+        else:
+            json_str = content
+
+        # Try parsing JSON
+        try:
+            result = json.loads(json_str)
+        except json.JSONDecodeError:
+            # Fallback: return entire cleaned content
+            return {"response": content, "confidence": "0%", "link": ""}
+
+        # Return structured fields
         return {
-            "response": answer,
-            "confidence": confidence,
-            "link": link
+            "response": result.get("response", ""),
+            "confidence": result.get("confidence", ""),
+            "link": result.get("link", "")
         }
     except Exception as e:
-        print("Ollama call error:", e)
-        return {"error": f"Erreur lors de la génération: {e}"}
-
-
-# Pour lancer le serveur :
-# uvicorn main:app --reload --port 8000
-# Pour faire une requête :
-# curl -X POST http://localhost:8000/ask -H "Content-Type: application/json" -d "{\"question\":\"Hello ??\"}"
+        print("Error calling Ollama:", e)
+        return {"response": "Error generating response.", "confidence": "0%", "link": ""}
