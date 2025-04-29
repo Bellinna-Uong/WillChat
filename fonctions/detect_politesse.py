@@ -1,6 +1,6 @@
 def detecter_politesse(texte):
     # Lire le fichier de politesse
-    with open('liste/politesse.txt', 'r', encoding='utf-8') as f:
+    with open('../liste/politesse.txt', 'r', encoding='utf-8') as f:
         mots_politesse = [ligne.strip() for ligne in f.readlines()]
     
     for mot in mots_politesse:
