@@ -44,150 +44,147 @@
       background-position: center;
       cursor: pointer;
     }
-
   </style>
 </head>
 <body>
-  <div class="cookie-game">
-    <div class="cookie-wrapper">
-      <div id="cookieImage"></div>
-      <button class="cookie-button" onclick="startCookieGame()">Cookie Clicker</button>
-    </div>
-    <div class="cookie-stats" id="cookieStats">
-      <p>Cookies: <span id="cookieCount">0</span></p>
-      <p>Cookies par seconde: <span id="cps">0</span></p>
-    </div>
+<div class="cookie-game">
+  <div class="cookie-wrapper">
+    <div id="cookieImage"></div>
+    <button class="cookie-button" onclick="startCookieGame()">Cookie Clicker</button>
   </div>
-
-  <h1>Dumb Tech Assistant</h1>
-  <div id="chat"></div>
-
-  <div class="input-container">
-    <form id="ask-form">
-      <input type="text" id="question" placeholder="Type your tech question" required />
-      <button type="submit">Ask</button>
-    </form>
+  <div class="cookie-stats" id="cookieStats">
+    <p>Cookies: <span id="cookieCount">0</span></p>
+    <p>Cookies par seconde: <span id="cps">0</span></p>
   </div>
+</div>
 
-  <div class="output-container">
-    <div class="output" id="result">
-      <p><strong>Response:</strong> <span id="response"></span></p>
-      <p><strong>Confidence:</strong> <span id="confidence"></span></p>
-      <p id="link"><strong>Link:</strong> <a href="#" target="_blank" id="link-url"></a></p>
-    </div>
+<h1>Dumb Tech Assistant</h1>
+<div id="chat"></div>
+
+<div class="input-container">
+  <form id="ask-form">
+    <input type="text" id="question" placeholder="Type your tech question" required />
+    <button type="submit">Ask</button>
+  </form>
+</div>
+
+<div class="output-container">
+  <div class="output" id="result">
+    <p><strong>Response:</strong> <span id="response"></span></p>
+    <p><strong>Confidence:</strong> <span id="confidence"></span></p>
+    <p id="link"><strong>Link:</strong> <a href="#" target="_blank" id="link-url"></a></p>
   </div>
+</div>
 
-  <script>
-    const chat = document.getElementById('chat');
-    const form = document.getElementById('ask-form');
-    const questionInput = document.getElementById('question');
+<script>
+  const chat = document.getElementById('chat');
+  const form = document.getElementById('ask-form');
+  const questionInput = document.getElementById('question');
 
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
-      const question = questionInput.value.trim();
-      if (!question) return;
+  // Cookie Clicker Game variables
+  let cookies = 0;
+  let cps = 2;
 
-      // Afficher le message de l'utilisateur
-      const userMsg = document.createElement('div');
-      userMsg.className = 'message user';
-      userMsg.innerText = question;
-      chat.appendChild(userMsg);
+  let upgrades = {
+    cursor: { cost: 15, owned: 0, cps: 0.1 },
+    grandma: { cost: 100, owned: 0, cps: 1 },
+    farm: { cost: 1100, owned: 0, cps: 8 }
+  };
 
-      // Afficher l'indicateur de chargement
-      const loadingMsg = document.createElement('div');
-      loadingMsg.className = 'message assistant loading';
-      loadingMsg.innerHTML = '<span class="thinking">Let me think...</span>';
-      chat.appendChild(loadingMsg);
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const question = questionInput.value.trim();
+    if (!question) return;
 
-      // Effacer l'input
-      questionInput.value = '';
+    // Perdre 0.02 cookie dès que le bouton Ask est cliqué (sans vérification)
+    cookies = Math.max(0, cookies - 0.02);
+    updateStats();
 
-      try {
-        const res = await fetch('http://localhost:8000/ask', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question })
-        });
-        const data = await res.json();
+    // Afficher le message de l'utilisateur
+    const userMsg = document.createElement('div');
+    userMsg.className = 'message user';
+    userMsg.innerText = question;
+    chat.appendChild(userMsg);
 
-        // Supprimer l'indicateur de chargement
-        loadingMsg.remove();
+    // Afficher l'indicateur de chargement
+    const loadingMsg = document.createElement('div');
+    loadingMsg.className = 'message assistant loading';
+    loadingMsg.innerHTML = '<span class="thinking">Let me think...</span>';
+    chat.appendChild(loadingMsg);
 
-        // Afficher la réponse de l'assistant
-        const assistantMsg = document.createElement('div');
-        assistantMsg.className = 'message assistant';
-        assistantMsg.innerText = data.response || 'No response';
-        chat.appendChild(assistantMsg);
+    // Effacer l'input
+    questionInput.value = '';
 
-        // Faire défiler vers le bas
-        chat.scrollTop = chat.scrollHeight;
+    try {
+      const res = await fetch('http://localhost:8700/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question })
+      });
+      const data = await res.json();
 
-        // show result details
-        document.getElementById('response').innerText = data.response;
-        document.getElementById('confidence').innerText = data.confidence;
-        const linkEl = document.getElementById('link-url');
-        if (data.link) {
-          linkEl.href = data.link;
-          linkEl.innerText = data.link;
-        } else {
-          linkEl.href = '#';
-          linkEl.innerText = '';
-        }
-        document.getElementById('result').style.display = 'block';
-      } catch (err) {
-        console.error(err);
-        // Supprimer l'indicateur de chargement en cas d'erreur
-        loadingMsg.remove();
-        const errorMsg = document.createElement('div');
-        errorMsg.className = 'message assistant';
-        errorMsg.innerText = 'Error contacting server';
-        chat.appendChild(errorMsg);
+      loadingMsg.remove();
+
+      const assistantMsg = document.createElement('div');
+      assistantMsg.className = 'message assistant';
+      assistantMsg.innerText = data.response || 'No response';
+      chat.appendChild(assistantMsg);
+
+      chat.scrollTop = chat.scrollHeight;
+
+      document.getElementById('response').innerText = data.response;
+      document.getElementById('confidence').innerText = data.confidence;
+      const linkEl = document.getElementById('link-url');
+      if (data.link) {
+        linkEl.href = data.link;
+        linkEl.innerText = data.link;
+      } else {
+        linkEl.href = '#';
+        linkEl.innerText = '';
       }
-    });
-
-    // Cookie Clicker Game
-    let cookies = 0;
-    let cps = 0;
-    let upgrades = {
-      cursor: { cost: 15, owned: 0, cps: 0.1 },
-      grandma: { cost: 100, owned: 0, cps: 1 },
-      farm: { cost: 1100, owned: 0, cps: 8 }
-    };
-
-    function startCookieGame() {
-      const stats = document.getElementById('cookieStats');
-      stats.style.display = 'block';
-      
-      // Mise à jour des statistiques chaque seconde
-      setInterval(() => {
-        cookies += cps;
-        updateStats();
-      }, 1000);
+      document.getElementById('result').style.display = 'block';
+    } catch (err) {
+      console.error(err);
+      loadingMsg.remove();
+      const errorMsg = document.createElement('div');
+      errorMsg.className = 'message assistant';
+      errorMsg.innerText = 'Error contacting server';
+      chat.appendChild(errorMsg);
     }
+  });
 
-    function clickCookie() {
-      cookies++;
+  function startCookieGame() {
+    const stats = document.getElementById('cookieStats');
+    stats.style.display = 'block';
+
+    setInterval(() => {
+      cookies += cps;
+      updateStats();
+    }, 1000);
+  }
+
+  function clickCookie() {
+    cookies++;
+    updateStats();
+  }
+
+  function buyUpgrade(upgrade) {
+    if (cookies >= upgrades[upgrade].cost) {
+      cookies -= upgrades[upgrade].cost;
+      upgrades[upgrade].owned++;
+      upgrades[upgrade].cost = Math.floor(upgrades[upgrade].cost * 1.15);
+      cps += upgrades[upgrade].cps;
       updateStats();
     }
+  }
 
-    function buyUpgrade(upgrade) {
-      if (cookies >= upgrades[upgrade].cost) {
-        cookies -= upgrades[upgrade].cost;
-        upgrades[upgrade].owned++;
-        upgrades[upgrade].cost = Math.floor(upgrades[upgrade].cost * 1.15);
-        cps += upgrades[upgrade].cps;
-        updateStats();
-      }
-    }
+  function updateStats() {
+    document.getElementById('cookieCount').textContent = cookies.toFixed(2); // Affiche 2 décimales maintenant
+    document.getElementById('cps').textContent = cps.toFixed(1);
+  }
 
-    function updateStats() {
-      document.getElementById('cookieCount').textContent = Math.floor(cookies);
-      document.getElementById('cps').textContent = cps.toFixed(1);
-    }
+  document.getElementById("cookieImage").onclick = clickCookie;
+</script>
 
-    // Ajouter le cookie cliquable
-    document.getElementById("cookieImage").onclick = clickCookie;
-
-  </script>
 </body>
 </html>
