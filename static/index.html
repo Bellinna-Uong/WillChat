@@ -4,23 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dumb Tech Assistant</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 2em; }
-    #result { margin-top: 1em; }
-    #link a { color: blue; text-decoration: underline; }
-  </style>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
   <h1>Dumb Tech Assistant</h1>
-  <form id="ask-form">
-    <input type="text" id="question" placeholder="Type your tech question" size="60" required />
-    <button type="submit">Ask</button>
-  </form>
+  <div class="input-container">
+    <form id="ask-form">
+      <input type="text" id="question" placeholder="Type your tech question" required />
+      <button type="submit">Ask</button>
+    </form>
+  </div>
 
-  <div id="result">
-    <p><strong>Response:</strong> <span id="response"></span></p>
-    <p><strong>Confidence:</strong> <span id="confidence"></span></p>
-    <p id="link"><strong>Link:</strong> <a href="#" target="_blank" id="link-url"></a></p>
+  <div class="output-container">
+    <div class="output" id="result">
+      <p><strong>Response:</strong> <span id="response"></span></p>
+      <p><strong>Confidence:</strong> <span id="confidence"></span></p>
+      <p id="link"><strong>Link:</strong> <a href="#" target="_blank" id="link-url"></a></p>
+    </div>
   </div>
 
   <script>
@@ -28,10 +28,10 @@
       e.preventDefault();
       const question = document.getElementById('question').value;
       // Equivalent curl command (for debugging)
-      console.log(`curl -X POST http://localhost:8000/ask -H "Content-Type: application/json" -d '{\"question\":\"${question}\"}'`);
+      console.log(`curl -X POST http://localhost:8700/ask -H "Content-Type: application/json" -d '{\"question\":\"${question}\"}'`);
 
       try {
-        const res = await fetch('http://localhost:8000/ask', {
+        const res = await fetch('http://localhost:8700/ask', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ question })
