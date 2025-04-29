@@ -1,0 +1,53 @@
+python, java, javascript, typescript,langage c,langage c++,langage c#,langage go, rust, ruby, swift, kotlin, bash, shell, terminal, console, ligne de commande, command line, powershell
+
+html, css, xml, json, yaml
+
+sql, mysql, postgresql, sqlite, mongodb, firebase, redis, oracle, base de données, base de donnees, database, table, requête, query, index, jointure, clé primaire, primary key, foreign key, clé étrangère
+
+api, rest, restful, graphql, websocket, http, https, ssl, tls, jeton, token, jwt, authentification, authentication, autorisation, authorization, oauth, ssh, ftp, tcp, udp, ip, dns, réseau, reseau, network, routeur, router, firewall, pare-feu, proxy, ping, latence, latency, bande passante, bandwidth
+
+docker, conteneur, container, kubernetes, pod, cluster, orchestration, orchestrateur, devops, ci, cd, intégration continue, integration continue, déploiement, deploiement, deployment, pipeline
+
+versionnage, version control, git, github, gitlab, bitbucket, merge, fusion, commit, branche, branch, rebase, tag
+
+ide, editeur, editor, vscode, visual studio code, intellij, eclipse, netbeans, jupyter, notebook, spyder, colab
+
+script, automatisation, automation, cron, cronjob
+
+thread, fil d’exécution, processus, process, mémoire, memory, ram, cpu, disque, storage, disque dur, hard drive, ssd, disque ssd
+
+cloud, nuage, aws, amazon web services, azure, gcp, google cloud, heroku, netlify, vercel, serverless
+
+backend, arrière-plan, frontend, interface, fullstack, développeur, developer
+
+react, vue, angular, svelte, nextjs, nuxtjs, tailwind, bootstrap, sass, scss, webpack, babel, npm, yarn, pnpm
+
+package, bibliothèque, library, librairie, module, dépendance, dependency, framework
+
+classe, class, objet, object, instance, méthode, method, fonction, function, variable, constante, condition, boucle, loop, if, else, switch, case, récursion, recursion
+
+logique, logique booléenne, opérateur, operator, booléen, boolean, string, chaîne, chaine, tableau, liste, list, array, dictionnaire, dict, dictionary, map, clé, key, valeur, value
+
+regex, expression régulière, regular expression
+
+test, test unitaire, unit test, unittest, pytest, jest, mocha, coverage, couverture de test, debug, breakpoint, journalisation, logging, exception, erreur, error, bug, optimisation, optimization, performance, scalabilité, scalability, latence, latency, cache
+
+microservice, microservices, architecture, mvc, mvvm, modèle vue contrôleur, model view controller
+
+design pattern, patron de conception, singleton, factory, fabrique, observer, state, état, flux, flow, événement, event, hook, context, redux, zustand, recoil
+
+intelligence artificielle, intelligence artif, ai, artificial intelligence, machine learning, apprentissage automatique, deep learning, apprentissage profond
+
+réseau de neurones, neural network, entraînement, training, dataset, ensemble de données, modèle, model, prédiction, prediction, classification, régression, regression, clustering, regroupement
+
+apprentissage supervisé, supervised learning, non supervisé, unsupervised, reinforcement learning, apprentissage par renforcement
+
+traitement du langage, nlp, natural language processing, tokenisation, tokenization, embedding, vectorisation, vectorization, vecteur, transformer, attention, gpt, bert, huggingface, langchain, llama, mistral, ollama, openai
+
+inférence, inference, pipeline, jupyter, notebook, colab, kaggle, pandas, numpy, scipy, scikit-learn, tensorflow, keras, pytorch
+
+scraping, raclage de données, crawler, robot d’indexation, beautifulsoup, selenium, playwright, puppeteer, navigateur, browser, headless
+
+cybersécurité, cybersecurite, sécurité, security, vulnérabilité, vulnerability, xss, csrf, injection sql, rce, lfi, rfi, exploit, malware, logiciel malveillant, antivirus, pare-feu, rootkit, honeypot, pentest, audit, conformité, compliance, iso 27001
+
+chiffrement, cryptographie, encryption, cryptography, hash, hachage, md5, sha256, bcrypt, salage, salt, rainbow table, table arc-en-ciel
