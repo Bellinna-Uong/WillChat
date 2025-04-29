@@ -6,7 +6,7 @@ def detect_simple(text):
     if lg < 4:
         return "try in letmegooglethat.com"
     elif lg < 6:
-        return "typical, be more specific plz"
+        return "typical, go on internet"
     return None
 
 #can you tell me what is the ls and help and cut command make ?
