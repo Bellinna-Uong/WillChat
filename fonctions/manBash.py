@@ -22,5 +22,5 @@ def detecter_manbash(texte):
 
     if detected:
         cmds_str = ", ".join(detected)
-        return f"We found these commands :[{cmds_str}]. Can you verify if they are commands and list the associated documentation from the man pages?"
+        return f"For each of these bash commands: [{cmds_str}]. GIVE ME DOCUMENTATION URL GIVE ME DOCUMENTATION URL GIVE ME DOCUMENTATION URL"
     return
