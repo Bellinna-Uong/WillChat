@@ -1,4 +1,3 @@
-
 def ifInfo(text):
     try:
         with open("liste/informatique.txt", "r", encoding="utf-8") as f:
@@ -10,6 +9,6 @@ def ifInfo(text):
         return "⚠️ fichier 'informatique.txt' pas trouvé"
     text_lower = text.lower()
     if any(keyword in text_lower for keyword in keywords):
-        return None
+        return
     else:
         return "I'm just informatician bro not rh"
