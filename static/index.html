@@ -4,62 +4,92 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dumb Tech Assistant</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 2em; }
-    #result { margin-top: 1em; }
-    #link a { color: blue; text-decoration: underline; }
-  </style>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
   <h1>Dumb Tech Assistant</h1>
-  <form id="ask-form">
-    <input type="text" id="question" placeholder="Type your tech question" size="60" required />
-    <button type="submit">Ask</button>
-  </form>
+  <div id="chat"></div>
 
-  <div id="result">
-    <p><strong>Response:</strong> <span id="response"></span></p>
-    <p><strong>Confidence:</strong> <span id="confidence"></span></p>
-    <p id="link"><strong>Link:</strong> <a href="#" target="_blank" id="link-url"></a></p>
+  <div class="input-container">
+    <form id="ask-form">
+      <input type="text" id="question" placeholder="Type your tech question" required />
+      <button type="submit">Ask</button>
+    </form>
+  </div>
+
+  <div class="output-container">
+    <div class="output" id="result">
+      <p><strong>Response:</strong> <span id="response"></span></p>
+      <p><strong>Confidence:</strong> <span id="confidence"></span></p>
+      <p id="link"><strong>Link:</strong> <a href="#" target="_blank" id="link-url"></a></p>
+    </div>
   </div>
 
   <script>
-    document.getElementById('ask-form').addEventListener('submit', async e => {
+    const chat = document.getElementById('chat');
+    const form = document.getElementById('ask-form');
+    const questionInput = document.getElementById('question');
+
+    form.addEventListener('submit', async e => {
       e.preventDefault();
-      const question = document.getElementById('question').value;
-      // Equivalent curl command (for debugging)
-      console.log(`curl -X POST http://localhost:8000/ask -H "Content-Type: application/json" -d '{\"question\":\"${question}\"}'`);
+      const question = questionInput.value.trim();
+      if (!question) return;
+
+      // Afficher le message de l'utilisateur
+      const userMsg = document.createElement('div');
+      userMsg.className = 'message user';
+      userMsg.innerText = question;
+      chat.appendChild(userMsg);
+
+      // Afficher l'indicateur de chargement
+      const loadingMsg = document.createElement('div');
+      loadingMsg.className = 'message assistant loading';
+      loadingMsg.innerHTML = '<span class="thinking">Let me think...</span>';
+      chat.appendChild(loadingMsg);
+
+      // Effacer l'input
+      questionInput.value = '';
 
       try {
-        const res = await fetch('http://localhost:8000/ask', {
+        const res = await fetch('http://localhost:8700/ask', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ question })
         });
         const data = await res.json();
 
-        // Try to parse nested JSON if answer is a JSON string
-        let respObj = data;
-        if (data.answer && data.answer.trim().startsWith('{')) {
-          try { respObj = JSON.parse(data.answer); } catch {}  
-        }
+        // Supprimer l'indicateur de chargement
+        loadingMsg.remove();
 
-        // Fill fields
-        document.getElementById('response').innerText = respObj.response || respObj.answer || 'No response';
-        document.getElementById('confidence').innerText = respObj.confidence || 'N/A';
+        // Afficher la réponse de l'assistant
+        const assistantMsg = document.createElement('div');
+        assistantMsg.className = 'message assistant';
+        assistantMsg.innerText = data.response || 'No response';
+        chat.appendChild(assistantMsg);
+
+        // Faire défiler vers le bas
+        chat.scrollTop = chat.scrollHeight;
+
+        // show result details
+        document.getElementById('response').innerText = data.response;
+        document.getElementById('confidence').innerText = data.confidence;
         const linkEl = document.getElementById('link-url');
-        if (respObj.link) {
-          linkEl.href = respObj.link;
-          linkEl.innerText = respObj.link;
+        if (data.link) {
+          linkEl.href = data.link;
+          linkEl.innerText = data.link;
         } else {
           linkEl.href = '#';
           linkEl.innerText = '';
         }
+        document.getElementById('result').style.display = 'block';
       } catch (err) {
         console.error(err);
-        document.getElementById('response').innerText = 'Error contacting server';
-        document.getElementById('confidence').innerText = '';
-        document.getElementById('link-url').innerText = '';
+        // Supprimer l'indicateur de chargement en cas d'erreur
+        loadingMsg.remove();
+        const errorMsg = document.createElement('div');
+        errorMsg.className = 'message assistant';
+        errorMsg.innerText = 'Error contacting server';
+        chat.appendChild(errorMsg);
       }
     });
   </script>
