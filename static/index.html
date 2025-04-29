@@ -5,8 +5,60 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dumb Tech Assistant</title>
   <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .cookie-game {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+    .cookie-button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .cookie-stats {
+      position: fixed;
+      top: 60px;
+      right: 20px;
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      display: none;
+    }
+    .cookie-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #cookieImage {
+      width: 60px;
+      height: 60px;
+      background-image: url("/static/cookie.png"); /* Assure-toi que l'image est bien là */
+      background-size: cover;
+      background-position: center;
+      cursor: pointer;
+    }
+
+  </style>
 </head>
 <body>
+  <div class="cookie-game">
+    <div class="cookie-wrapper">
+      <div id="cookieImage"></div>
+      <button class="cookie-button" onclick="startCookieGame()">Cookie Clicker</button>
+    </div>
+    <div class="cookie-stats" id="cookieStats">
+      <p>Cookies: <span id="cookieCount">0</span></p>
+      <p>Cookies par seconde: <span id="cps">0</span></p>
+    </div>
+  </div>
+
   <h1>Dumb Tech Assistant</h1>
   <div id="chat"></div>
 
@@ -92,6 +144,50 @@
         chat.appendChild(errorMsg);
       }
     });
+
+    // Cookie Clicker Game
+    let cookies = 0;
+    let cps = 0;
+    let upgrades = {
+      cursor: { cost: 15, owned: 0, cps: 0.1 },
+      grandma: { cost: 100, owned: 0, cps: 1 },
+      farm: { cost: 1100, owned: 0, cps: 8 }
+    };
+
+    function startCookieGame() {
+      const stats = document.getElementById('cookieStats');
+      stats.style.display = 'block';
+      
+      // Mise à jour des statistiques chaque seconde
+      setInterval(() => {
+        cookies += cps;
+        updateStats();
+      }, 1000);
+    }
+
+    function clickCookie() {
+      cookies++;
+      updateStats();
+    }
+
+    function buyUpgrade(upgrade) {
+      if (cookies >= upgrades[upgrade].cost) {
+        cookies -= upgrades[upgrade].cost;
+        upgrades[upgrade].owned++;
+        upgrades[upgrade].cost = Math.floor(upgrades[upgrade].cost * 1.15);
+        cps += upgrades[upgrade].cps;
+        updateStats();
+      }
+    }
+
+    function updateStats() {
+      document.getElementById('cookieCount').textContent = Math.floor(cookies);
+      document.getElementById('cps').textContent = cps.toFixed(1);
+    }
+
+    // Ajouter le cookie cliquable
+    document.getElementById("cookieImage").onclick = clickCookie;
+
   </script>
 </body>
 </html>
