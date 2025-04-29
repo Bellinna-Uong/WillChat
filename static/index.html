@@ -44,6 +44,46 @@
       background-position: center;
       cursor: pointer;
     }
+
+    /* Snake Game Styles */
+    #snakeGameModal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.8);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #snakeGameContainer {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    #snakeCanvas {
+      border: 1px solid #000;
+      margin-bottom: 10px;
+    }
+
+    #snakeGameControls {
+      margin-top: 10px;
+    }
+
+    .snake-game-button {
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 0 5px;
+    }
   </style>
 </head>
 <body>
@@ -55,6 +95,128 @@
   <div class="cookie-stats" id="cookieStats">
     <p>Cookies: <span id="cookieCount">0</span></p>
     <p>Cookies par seconde: <span id="cps">0</span></p>
+  </div>
+</div>
+
+... (307lignes restantes)
+Réduire
+message.txt
+12 Ko
+﻿
+🐑Happiness and prosperity
+im.belli
+im.belli
+ 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Will Chat</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .cookie-game {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+    .cookie-button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .cookie-stats {
+      position: fixed;
+      top: 60px;
+      right: 20px;
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      display: none;
+    }
+    .cookie-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #cookieImage {
+      width: 60px;
+      height: 60px;
+      background-image: url("/static/cookie.png"); /* Assure-toi que l'image est bien là */
+      background-size: cover;
+      background-position: center;
+      cursor: pointer;
+    }
+
+    /* Snake Game Styles */
+    #snakeGameModal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.8);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #snakeGameContainer {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    #snakeCanvas {
+      border: 1px solid #000;
+      margin-bottom: 10px;
+    }
+
+    #snakeGameControls {
+      margin-top: 10px;
+    }
+
+    .snake-game-button {
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 0 5px;
+    }
+  </style>
+</head>
+<body>
+<div class="cookie-game">
+  <div class="cookie-wrapper">
+    <div id="cookieImage"></div>
+    <button class="cookie-button" onclick="startCookieGame()">Cookie Clicker</button>
+  </div>
+  <div class="cookie-stats" id="cookieStats">
+    <p>Cookies: <span id="cookieCount">0</span></p>
+    <p>Cookies par seconde: <span id="cps">0</span></p>
+  </div>
+</div>
+
+<!-- Snake Game Modal -->
+<div id="snakeGameModal">
+  <div id="snakeGameContainer">
+    <h2>Snake Game</h2>
+    <canvas id="snakeCanvas" width="400" height="400"></canvas>
+    <div id="snakeGameControls">
+      <p>Score: <span id="snakeScore">0</span></p>
+      <button class="snake-game-button" onclick="startSnakeGame()">Start Game</button>
+      <button class="snake-game-button" onclick="closeSnakeGame()">Close</button>
+    </div>
   </div>
 </div>
 
@@ -80,6 +242,7 @@
   const chat = document.getElementById('chat');
   const form = document.getElementById('ask-form');
   const questionInput = document.getElementById('question');
+  let askCount = 0;
 
   // Cookie Clicker Game variables
   let cookies = 0;
@@ -96,9 +259,18 @@
     const question = questionInput.value.trim();
     if (!question) return;
 
-    // Perdre 0.02 cookie dès que le bouton Ask est cliqué (sans vérification)
+    // Perdre 0.5 cookie dès que le bouton Ask est cliqué (sans vérification)
     cookies = Math.max(0, cookies - 0.5);
     updateStats();
+
+    // Incrémenter le compteur de requêtes
+    askCount++;
+
+    // Si 5 requêtes sans vérification, ouvrir le jeu Snake
+    if (askCount >= 5) {
+      openSnakeGame();
+      askCount = 0; // Réinitialiser le compteur
+    }
 
     // Afficher le message de l'utilisateur
     const userMsg = document.createElement('div');
@@ -179,11 +351,165 @@
   }
 
   function updateStats() {
-    document.getElementById('cookieCount').textContent = cookies.toFixed(2); // Affiche 2 décimales maintenant
+    document.getElementById('cookieCount').textContent = cookies.toFixed(2);
     document.getElementById('cps').textContent = cps.toFixed(1);
   }
 
   document.getElementById("cookieImage").onclick = clickCookie;
+
+  // Snake Game Functions
+  let snakeGame;
+  let snakeContext;
+  let snake = [];
+  let food = {};
+  let direction = 'right';
+  let nextDirection = 'right';
+  let score = 0;
+  let gameSpeed = 150;
+  let gameLoop;
+
+  function openSnakeGame() {
+    document.getElementById('snakeGameModal').style.display = 'flex';
+    const canvas = document.getElementById('snakeCanvas');
+    snakeContext = canvas.getContext('2d');
+    resetSnakeGame();
+  }
+
+  function closeSnakeGame() {
+    document.getElementById('snakeGameModal').style.display = 'none';
+    clearInterval(gameLoop);
+  }
+
+  function startSnakeGame() {
+    resetSnakeGame();
+    gameLoop = setInterval(updateSnakeGame, gameSpeed);
+    document.addEventListener('keydown', changeDirection);
+  }
+
+  function resetSnakeGame() {
+    snake = [
+      {x: 200, y: 200},
+      {x: 190, y: 200},
+      {x: 180, y: 200},
+      {x: 170, y: 200},
+      {x: 160, y: 200}
+    ];
+    direction = 'right';
+    nextDirection = 'right';
+    score = 0;
+    document.getElementById('snakeScore').textContent = score;
+    generateFood();
+    drawSnakeGame();
+  }
+
+  function generateFood() {
+    food = {
+      x: Math.floor(Math.random() * 20) * 20,
+      y: Math.floor(Math.random() * 20) * 20
+    };
+
+    // Make sure food doesn't appear on snake
+    for (let segment of snake) {
+      if (segment.x === food.x && segment.y === food.y) {
+        return generateFood();
+      }
+    }
+  }
+
+  function drawSnakeGame() {
+    // Clear canvas
+    snakeContext.fillStyle = 'white';
+    snakeContext.fillRect(0, 0, 400, 400);
+
+    // Draw snake
+    snake.forEach((segment, index) => {
+      if (index === 0) {
+        snakeContext.fillStyle = 'green'; // Head color
+      } else {
+        snakeContext.fillStyle = 'lightgreen'; // Body color
+      }
+      snakeContext.fillRect(segment.x, segment.y, 20, 20);
+      snakeContext.strokeStyle = 'darkgreen';
+      snakeContext.strokeRect(segment.x, segment.y, 20, 20);
+    });
+
+    // Draw food
+    snakeContext.fillStyle = 'red';
+    snakeContext.fillRect(food.x, food.y, 20, 20);
+  }
+
+  function updateSnakeGame() {
+    // Update direction
+    direction = nextDirection;
+
+    // Calculate new head position
+    const head = {x: snake[0].x, y: snake[0].y};
+
+    switch (direction) {
+      case 'up':
+        head.y -= 20;
+        break;
+      case 'down':
+        head.y += 20;
+        break;
+      case 'left':
+        head.x -= 20;
+        break;
+      case 'right':
+        head.x += 20;
+        break;
+    }
+
+    // Check for collisions with walls
+    if (head.x < 0 || head.x >= 400 || head.y < 0 || head.y >= 400) {
+      clearInterval(gameLoop);
+      alert('Game Over! Your score: ' + score);
+      return;
+    }
+
+    // Check for collisions with self
+    for (let i = 0; i < snake.length; i++) {
+      if (head.x === snake[i].x && head.y === snake[i].y) {
+        clearInterval(gameLoop);
+        alert('Game Over! Your score: ' + score);
+        return;
+      }
+    }
+
+    // Check if snake ate food
+    const ateFood = head.x === food.x && head.y === food.y;
+
+    if (ateFood) {
+      // Increase score
+      score++;
+      document.getElementById('snakeScore').textContent = score;
+
+      // Generate new food
+      generateFood();
+    } else {
+      // Remove tail if no food was eaten
+      snake.pop();
+    }
+
+    // Add new head
+    snake.unshift(head);
+
+    // Draw the game
+    drawSnakeGame();
+  }
+
+  function changeDirection(e) {
+    // Only allow direction changes that aren't opposite to current direction
+    if (e.key === 'ArrowUp' && direction !== 'down') {
+      nextDirection = 'up';
+    } else if (e.key === 'ArrowDown' && direction !== 'up') {
+      nextDirection = 'down';
+    } else if (e.key === 'ArrowLeft' && direction !== 'right') {
+      nextDirection = 'left';
+    } else if (e.key === 'ArrowRight' && direction !== 'left') {
+      nextDirection = 'right';
+    }
+  }
 </script>
 
 </body>
