@@ -10,13 +10,15 @@ import json
 from prompt_config import SYSTEM_PROMPT
 
 from fonctions.manBash import detecter_manbash
-from fonctions.detect_informatique import ifInfo  # adapte le nom du fichier si besoin
+from fonctions.detect_informatique import ifInfo  # Adaptez l'importation si nécessaire
 from fonctions.detect_politesse import detecter_politesse
 
-class AskRequest(BaseModel):
-    question: str
+import difflib
 
-# Initialize app and CORS
+# In-memory history of questions and responses
+history = {}
+
+# Initialiser l'application FastAPI
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -24,16 +26,27 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 # Serve static front
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
 @app.get("/", response_class=HTMLResponse)
 async def serve_index():
     with open("static/index.html", encoding="utf-8") as f:
         return HTMLResponse(f.read())
 
-# Use the generate endpoint
+# URL du service de génération
 GENERATE_URL = "http://localhost:11434/api/generate"
 MODEL = "deepseek-r1:7b"
+
+# Fonction de similarité de chaînes (utilise difflib pour calculer la similarité)
+def get_similarity(question1, question2):
+    sequence = difflib.SequenceMatcher(None, question1, question2)
+    return sequence.ratio()  # Renvoie un score entre 0 et 1
+
+# Classe de la requête
+class AskRequest(BaseModel):
+    question: str
 
 @app.post("/ask")
 def ask(req: AskRequest):
@@ -41,16 +54,27 @@ def ask(req: AskRequest):
     if not question:
         return {"response": "Error: No question provided.", "confidence": "0%", "link": ""}
 
-    # URL-encode question for possible links
+    # Vérifier si la question contient une phrase détectée par ifInfo
+    if ifInfo(question):
+        # Si une phrase spécifique est détectée, utilisez la réponse de ifInfo
+        info_response = ifInfo(question)
+        return {"response": info_response, "confidence": "100%", "link": ""}
+
+    # Vérifier si la question a déjà été posée dans l'historique
+    for stored_question, _ in history.items():
+        similarity = get_similarity(question, stored_question)
+        if similarity >= 0.7:  # Si la similarité est >= 70%
+            return {"response": "Look on the top", "confidence": "100%", "link": ""}
+
+    # URL-encode la question pour les liens potentiels
     encoded_q = urllib.parse.quote(question)
 
-    # Build prompt: system prompt + user question
+    # Construire le prompt : prompt système + question utilisateur
     prompt = SYSTEM_PROMPT.replace("<url_encoded_question>", encoded_q)
     prompt += detecter_manbash(prompt)
     prompt = prompt + f"\nUser: {question}\nAssistant:"
 
     try:
-        # Call Ollama generate endpoint
         payload = {
             "model": MODEL,
             "prompt": prompt,
@@ -60,16 +84,13 @@ def ask(req: AskRequest):
         resp.raise_for_status()
         data = resp.json()
 
-        # Extract raw response from generate
+        # Extraire la réponse brute
         content = data.get("response", "").strip()
 
-        # Remove any <think>...</think> blocks
+        # Supprimer les blocs <think>...</think>
         content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
 
-        # Debug log
-        print("CLEANED CONTENT:", content)
-
-        # Extract JSON substring
+        # Essayer d'extraire le JSON
         start = content.find("{")
         end = content.rfind("}")
         if start != -1 and end != -1 and end > start:
@@ -77,19 +98,23 @@ def ask(req: AskRequest):
         else:
             json_str = content
 
-        # Try parsing JSON
         try:
             result = json.loads(json_str)
         except json.JSONDecodeError:
-            # Fallback: return entire cleaned content
-            return {"response": content, "confidence": "0%", "link": ""}
+            # En cas d'échec, renvoyez le contenu nettoyé
+            response_data = {"response": content, "confidence": "0%", "link": ""}
+            history[question] = response_data
+            return response_data
 
-        # Return structured fields
-        return {
+        # Construire et stocker la réponse structurée
+        response_data = {
             "response": result.get("response", ""),
             "confidence": result.get("confidence", ""),
             "link": result.get("link", "")
         }
+        history[question] = response_data
+        return response_data
+
     except Exception as e:
         print("Error calling Ollama:", e)
         return {"response": "Error generating response.", "confidence": "0%", "link": ""}

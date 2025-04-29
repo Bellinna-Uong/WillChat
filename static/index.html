@@ -232,7 +232,6 @@ im.belli
 
 <div class="output-container">
   <div class="output" id="result">
-    <p><strong>Response:</strong> <span id="response"></span></p>
     <p><strong>Confidence:</strong> <span id="confidence"></span></p>
     <p id="link"><strong>Link:</strong> <a href="#" target="_blank" id="link-url"></a></p>
   </div>
@@ -304,7 +303,6 @@ im.belli
 
       chat.scrollTop = chat.scrollHeight;
 
-      document.getElementById('response').innerText = data.response;
       document.getElementById('confidence').innerText = data.confidence;
       const linkEl = document.getElementById('link-url');
       if (data.link) {
