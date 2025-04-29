@@ -9,6 +9,9 @@ import re
 import json
 from prompt_config import SYSTEM_PROMPT
 
+from fonctions.manBash import detecter_manbash
+
+
 class AskRequest(BaseModel):
     question: str
 
@@ -42,6 +45,7 @@ def ask(req: AskRequest):
 
     # Build prompt: system prompt + user question
     prompt = SYSTEM_PROMPT.replace("<url_encoded_question>", encoded_q)
+    prompt += detecter_manbash(prompt)
     prompt = prompt + f"\nUser: {question}\nAssistant:"
 
     try:
