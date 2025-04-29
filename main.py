@@ -10,7 +10,8 @@ import json
 from prompt_config import SYSTEM_PROMPT
 
 from fonctions.manBash import detecter_manbash
-
+from fonctions.detect_informatique import ifInfo  # adapte le nom du fichier si besoin
+from fonctions.detect_politesse import detecter_politesse
 
 class AskRequest(BaseModel):
     question: str
