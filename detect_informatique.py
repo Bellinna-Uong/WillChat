@@ -1,7 +1,7 @@
 
 def ifInfo(text):
     try:
-        with open("informatique.txt", "r", encoding="utf-8") as f:
+        with open("liste/informatique.txt", "r", encoding="utf-8") as f:
             keywords = []
             for line in f:
                 line_keywords = [k.strip().lower() for k in line.strip().split(",") if k.strip()]
@@ -12,4 +12,4 @@ def ifInfo(text):
     if any(keyword in text_lower for keyword in keywords):
         return None
     else:
-        return "Je suis informatitien pas rh"
+        return "I'm just informatician bro not rh"
