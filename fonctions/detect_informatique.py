@@ -1,4 +1,3 @@
-
 def ifInfo(text):
     try:
         with open("liste/informatique.txt", "r", encoding="utf-8") as f:
