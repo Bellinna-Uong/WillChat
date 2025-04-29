@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dumb Tech Assistant</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; }
+    #result { margin-top: 1em; }
+    #link a { color: blue; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Dumb Tech Assistant</h1>
+  <form id="ask-form">
+    <input type="text" id="question" placeholder="Type your tech question" size="60" required />
+    <button type="submit">Ask</button>
+  </form>
+
+  <div id="result">
+    <p><strong>Response:</strong> <span id="response"></span></p>
+    <p><strong>Confidence:</strong> <span id="confidence"></span></p>
+    <p id="link"><strong>Link:</strong> <a href="#" target="_blank" id="link-url"></a></p>
+  </div>
+
+  <script>
+    document.getElementById('ask-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const question = document.getElementById('question').value;
+      // Equivalent curl command (for debugging)
+      console.log(`curl -X POST http://localhost:8000/ask -H "Content-Type: application/json" -d '{\"question\":\"${question}\"}'`);
+
+      try {
+        const res = await fetch('http://localhost:8000/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question })
+        });
+        const data = await res.json();
+
+        // Try to parse nested JSON if answer is a JSON string
+        let respObj = data;
+        if (data.answer && data.answer.trim().startsWith('{')) {
+          try { respObj = JSON.parse(data.answer); } catch {}  
+        }
+
+        // Fill fields
+        document.getElementById('response').innerText = respObj.response || respObj.answer || 'No response';
+        document.getElementById('confidence').innerText = respObj.confidence || 'N/A';
+        const linkEl = document.getElementById('link-url');
+        if (respObj.link) {
+          linkEl.href = respObj.link;
+          linkEl.innerText = respObj.link;
+        } else {
+          linkEl.href = '#';
+          linkEl.innerText = '';
+        }
+      } catch (err) {
+        console.error(err);
+        document.getElementById('response').innerText = 'Error contacting server';
+        document.getElementById('confidence').innerText = '';
+        document.getElementById('link-url').innerText = '';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,47 +1,90 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 import requests
+import urllib.parse
+import re
+import json
 from prompt_config import SYSTEM_PROMPT
 
 class AskRequest(BaseModel):
     question: str
 
+# Initialize app and CORS
 app = FastAPI()
-OLLAMA_URL = "http://localhost:11434/api/generate"
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+# Serve static front
+app.mount("/static", StaticFiles(directory="static"), name="static")
+@app.get("/", response_class=HTMLResponse)
+async def serve_index():
+    with open("static/index.html", encoding="utf-8") as f:
+        return HTMLResponse(f.read())
+
+# Use the generate endpoint
+GENERATE_URL = "http://localhost:11434/api/generate"
 MODEL = "deepseek-r1:7b"
 
 @app.post("/ask")
 def ask(req: AskRequest):
     question = req.question.strip()
-    print("Received question:", question)
     if not question:
-        return {"error": "Question manquante"}
+        return {"response": "Error: No question provided.", "confidence": "0%", "link": ""}
 
-    full_prompt = f"{SYSTEM_PROMPT}\nUser: {question}\nAssistant:"
+    # URL-encode question for possible links
+    encoded_q = urllib.parse.quote(question)
 
-    payload = {
-        "model": MODEL,
-        "prompt": full_prompt,
-        "stream": False
-    }
+    # Build prompt: system prompt + user question
+    prompt = SYSTEM_PROMPT.replace("<url_encoded_question>", encoded_q)
+    prompt = prompt + f"\nUser: {question}\nAssistant:"
 
     try:
-        resp = requests.post(OLLAMA_URL, json=payload, timeout=None)
-        print("Ollama status code:", resp.status_code)
+        # Call Ollama generate endpoint
+        payload = {
+            "model": MODEL,
+            "prompt": prompt,
+            "stream": False
+        }
+        resp = requests.post(GENERATE_URL, json=payload, timeout=None)
         resp.raise_for_status()
-        result = resp.json()
-        print("Ollama JSON:", result)
+        data = resp.json()
 
-        answer = result.get("response", "").strip()
-        if not answer:
-            answer = "Erreur: réponse vide reçue de la part d'Ollama."
+        # Extract raw response from generate
+        content = data.get("response", "").strip()
 
-        return {"answer": answer}
+        # Remove any <think>...</think> blocks
+        content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
+
+        # Debug log
+        print("CLEANED CONTENT:", content)
+
+        # Extract JSON substring
+        start = content.find("{")
+        end = content.rfind("}")
+        if start != -1 and end != -1 and end > start:
+            json_str = content[start:end+1]
+        else:
+            json_str = content
+
+        # Try parsing JSON
+        try:
+            result = json.loads(json_str)
+        except json.JSONDecodeError:
+            # Fallback: return entire cleaned content
+            return {"response": content, "confidence": "0%", "link": ""}
+
+        # Return structured fields
+        return {
+            "response": result.get("response", ""),
+            "confidence": result.get("confidence", ""),
+            "link": result.get("link", "")
+        }
     except Exception as e:
-        print("ERREUR LORS DE L'APPEL À OLLAMA:", e)
-        return {"error": f"Erreur lors de la génération: {e}"}
-
-# Pour lancer le serveur :
-# uvicorn main:app --reload --port 8000
-# Pour faire une requête :
-# curl -X POST http://localhost:8000/ask -H "Content-Type: application/json" -d "{\"question\":\"Hello ??\"}"
+        print("Error calling Ollama:", e)
+        return {"response": "Error generating response.", "confidence": "0%", "link": ""}
