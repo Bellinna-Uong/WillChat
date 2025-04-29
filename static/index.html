@@ -6,12 +6,18 @@
   <title>Dumb Tech Assistant</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 2em; }
-    #result { margin-top: 1em; }
+    #chat { max-width: 800px; margin-bottom: 1em; }
+    .message { padding: 0.5em 1em; border-radius: 10px; margin: 0.5em 0; width: fit-content; max-width: 70%; }
+    .assistant { background: #f1f1f1; text-align: left; }
+    .user { background: #d1e7dd; text-align: right; margin-left: auto; }
+    #result { display: none; margin-top: 1em; }
     #link a { color: blue; text-decoration: underline; }
   </style>
 </head>
 <body>
   <h1>Dumb Tech Assistant</h1>
+  <div id="chat"></div>
+
   <form id="ask-form">
     <input type="text" id="question" placeholder="Type your tech question" size="60" required />
     <button type="submit">Ask</button>
@@ -24,11 +30,23 @@
   </div>
 
   <script>
-    document.getElementById('ask-form').addEventListener('submit', async e => {
+    const chat = document.getElementById('chat');
+    const form = document.getElementById('ask-form');
+    const questionInput = document.getElementById('question');
+
+    form.addEventListener('submit', async e => {
       e.preventDefault();
-      const question = document.getElementById('question').value;
-      // Equivalent curl command (for debugging)
-      console.log(`curl -X POST http://localhost:8000/ask -H "Content-Type: application/json" -d '{\"question\":\"${question}\"}'`);
+      const question = questionInput.value.trim();
+      if (!question) return;
+
+      // display user message
+      const userMsg = document.createElement('div');
+      userMsg.className = 'message user';
+      userMsg.innerText = question;
+      chat.appendChild(userMsg);
+
+      // clear input
+      questionInput.value = '';
 
       try {
         const res = await fetch('http://localhost:8000/ask', {
@@ -38,28 +56,29 @@
         });
         const data = await res.json();
 
-        // Try to parse nested JSON if answer is a JSON string
-        let respObj = data;
-        if (data.answer && data.answer.trim().startsWith('{')) {
-          try { respObj = JSON.parse(data.answer); } catch {}  
-        }
+        // append assistant message
+        const assistantMsg = document.createElement('div');
+        assistantMsg.className = 'message assistant';
+        assistantMsg.innerText = data.response;
+        chat.appendChild(assistantMsg);
 
-        // Fill fields
-        document.getElementById('response').innerText = respObj.response || respObj.answer || 'No response';
-        document.getElementById('confidence').innerText = respObj.confidence || 'N/A';
+        // show result details
+        document.getElementById('response').innerText = data.response;
+        document.getElementById('confidence').innerText = data.confidence;
         const linkEl = document.getElementById('link-url');
-        if (respObj.link) {
-          linkEl.href = respObj.link;
-          linkEl.innerText = respObj.link;
+        if (data.link) {
+          linkEl.href = data.link;
+          linkEl.innerText = data.link;
         } else {
           linkEl.href = '#';
           linkEl.innerText = '';
         }
+        document.getElementById('result').style.display = 'block';
+
+        // scroll chat to bottom
+        chat.scrollTop = chat.scrollHeight;
       } catch (err) {
         console.error(err);
-        document.getElementById('response').innerText = 'Error contacting server';
-        document.getElementById('confidence').innerText = '';
-        document.getElementById('link-url').innerText = '';
       }
     });
   </script>
