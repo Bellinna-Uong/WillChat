@@ -8,14 +8,14 @@
 </head>
 <body>
   <h1>Dumb Tech Assistant</h1>
+  <div id="chat"></div>
+
   <div class="input-container">
     <form id="ask-form">
       <input type="text" id="question" placeholder="Type your tech question" required />
       <button type="submit">Ask</button>
     </form>
   </div>
-
-  <div id="chat"></div>
 
   <div class="output-container">
     <div class="output" id="result">
@@ -35,13 +35,19 @@
       const question = questionInput.value.trim();
       if (!question) return;
 
-      // display user message
+      // Afficher le message de l'utilisateur
       const userMsg = document.createElement('div');
       userMsg.className = 'message user';
       userMsg.innerText = question;
       chat.appendChild(userMsg);
 
-      // clear input
+      // Afficher l'indicateur de chargement
+      const loadingMsg = document.createElement('div');
+      loadingMsg.className = 'message assistant loading';
+      loadingMsg.innerHTML = '<span class="thinking">Let me think...</span>';
+      chat.appendChild(loadingMsg);
+
+      // Effacer l'input
       questionInput.value = '';
 
       try {
@@ -52,11 +58,17 @@
         });
         const data = await res.json();
 
-        // append assistant message
+        // Supprimer l'indicateur de chargement
+        loadingMsg.remove();
+
+        // Afficher la réponse de l'assistant
         const assistantMsg = document.createElement('div');
         assistantMsg.className = 'message assistant';
-        assistantMsg.innerText = data.response;
+        assistantMsg.innerText = data.response || 'No response';
         chat.appendChild(assistantMsg);
+
+        // Faire défiler vers le bas
+        chat.scrollTop = chat.scrollHeight;
 
         // show result details
         document.getElementById('response').innerText = data.response;
@@ -70,11 +82,14 @@
           linkEl.innerText = '';
         }
         document.getElementById('result').style.display = 'block';
-
-        // scroll chat to bottom
-        chat.scrollTop = chat.scrollHeight;
       } catch (err) {
         console.error(err);
+        // Supprimer l'indicateur de chargement en cas d'erreur
+        loadingMsg.remove();
+        const errorMsg = document.createElement('div');
+        errorMsg.className = 'message assistant';
+        errorMsg.innerText = 'Error contacting server';
+        chat.appendChild(errorMsg);
       }
     });
   </script>

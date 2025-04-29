@@ -101,6 +101,22 @@ button:hover {
     border-bottom-left-radius: 5px;
 }
 
+.message.loading {
+    background-color: #f1f1f1;
+    color: #666;
+}
+
+.thinking {
+    display: inline-block;
+    position: relative;
+}
+
+.thinking::after {
+    content: '...';
+    position: absolute;
+    animation: dots 1.5s infinite;
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -109,6 +125,18 @@ button:hover {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+@keyframes dots {
+    0%, 20% {
+        content: '.';
+    }
+    40% {
+        content: '..';
+    }
+    60%, 100% {
+        content: '...';
     }
 }
 
